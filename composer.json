@@ -1,5 +1,5 @@
 {
-  "name": "VFiber/TableGenerator",
+  "name": "vfiber/tablegenerator",
   "description": "Simple data-to-screen solution for table-able datasources",
   "type": "library",
   "require": {
