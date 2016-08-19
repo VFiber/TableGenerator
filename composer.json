@@ -1,0 +1,21 @@
+{
+  "name": "vfiber/table-generator",
+  "description": "Simple data-to-screen solution for table-able datasources",
+  "type": "library",
+  "require": {
+    "phpoffice/phpexcel": "1.8.0"
+  },
+  "license": "WTFPL",
+  "authors": [
+    {
+      "name": "Adam Fibinger",
+      "email": "vfiber@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "TableGenerator\\": "src/"
+    }
+  }
+}
