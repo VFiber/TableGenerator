@@ -2,8 +2,8 @@
   "name": "vfiber/tablegenerator",
   "description": "Simple data-to-screen solution for table-able datasources",
   "type": "library",
-  "require": {
-    "phpoffice/phpexcel": "1.8.0"
+  "suggest": {
+    "phpoffice/phpexcel": ">=1.8"
   },
   "license": "WTFPL",
   "authors": [
