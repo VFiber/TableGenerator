@@ -72,12 +72,32 @@ abstract class TransformableData implements TransformableDataInterface
 	}
 
 	/**
-	 * @inheritdoc
+	 * @param array $columns Assoc array: ['field_id' => 'DisplayedName For field_id column'] or ['field_id' => ['displayedName'
+	 *                       =>"blabla",'formatter' => function($field, $row)... ]]
+	 *
+	 * <pre>
+	 * 		//callable could be anything that returns true for is_callable($callable)
+	 * 		$callable = [$classInstance, 'functionName'];
+	 * 		$callable = function ($col, $rowFromDataSource)
+	 * 		{
+	 * 			return floor($col);
+	 * 		};
+	 * 		$callable = [$classInstance, 'functionName'];
+	 * 		//col definition example
+	 * 		$stuff = [
+	 * 			'name'  => 'Column name to display',
+	 * 			//simple name with transform function
+	 * 			'name2' => ['Column name to display', $callable],
+	 * 			//for the lazy ones, this time 'name3' is set both for internal and displayed name
+	 * 			'name3' => $callable,
+	 * 		];
+	 * </pre>
 	 *
 	 * @return bool
 	 */
 	public function setColumnsAsArray(array $columns)
 	{
+
 		foreach ($columns as $columnId => $data)
 		{
 			$hasDisplayName = isset($data['displayedName']);
@@ -113,6 +133,12 @@ abstract class TransformableData implements TransformableDataInterface
 				{
 					$found = true;
 					$this->setColumn($columnId, $data);
+				}
+
+				if (is_callable($data))
+				{
+					$found = true;
+					$this->setColumn($columnId, $columnId, $data);
 				}
 			}
 
