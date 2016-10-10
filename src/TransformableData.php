@@ -76,21 +76,21 @@ abstract class TransformableData implements TransformableDataInterface
 	 *                       =>"blabla",'formatter' => function($field, $row)... ]]
 	 *
 	 * <pre>
-	 * 		//callable could be anything that returns true for is_callable($callable)
-	 * 		$callable = [$classInstance, 'functionName'];
-	 * 		$callable = function ($col, $rowFromDataSource)
-	 * 		{
-	 * 			return floor($col);
-	 * 		};
-	 * 		$callable = [$classInstance, 'functionName'];
-	 * 		//col definition example
-	 * 		$stuff = [
-	 * 			'name'  => 'Column name to display',
-	 * 			//simple name with transform function
-	 * 			'name2' => ['Column name to display', $callable],
-	 * 			//for the lazy ones, this time 'name3' is set both for internal and displayed name
-	 * 			'name3' => $callable,
-	 * 		];
+	 *        //callable could be anything that returns true for is_callable($callable)
+	 *        $callable = [$classInstance, 'functionName'];
+	 *        $callable = function ($col, $rowFromDataSource)
+	 *        {
+	 *            return floor($col);
+	 *        };
+	 *        $callable = [$classInstance, 'functionName'];
+	 *        //col definition example
+	 *        $stuff = [
+	 *            'name'  => 'Column name to display',
+	 *            //simple name with transform function
+	 *            'name2' => ['Column name to display', $callable],
+	 *            //for the lazy ones, this time 'name3' is set both for internal and displayed name
+	 *            'name3' => $callable,
+	 *        ];
 	 * </pre>
 	 *
 	 * @return bool
@@ -100,11 +100,21 @@ abstract class TransformableData implements TransformableDataInterface
 
 		foreach ($columns as $columnId => $data)
 		{
-			$hasDisplayName = isset($data['displayedName']);
 			$found = false;
 
-			if (is_array($data))
+			if (is_callable($data))
 			{
+				$found = true;
+				$this->setColumn($columnId, $columnId, $data);
+			}
+			elseif (is_string($data))
+			{
+				$found = true;
+				$this->setColumn($columnId, $data);
+			}
+			elseif (is_array($data))
+			{
+				$hasDisplayName = isset($data['displayedName']);
 				if ($hasDisplayName)
 				{
 					//rendesen van összerakva: ['displayedName' =>"blabla",'formatter' => function($field, $row)... ]
@@ -125,20 +135,6 @@ abstract class TransformableData implements TransformableDataInterface
 					$keys = array_keys($data);
 					$this->setColumn($columnId, $data[$keys[1]]);
 					$found = true;
-				}
-			}
-			else
-			{
-				if (is_string($data))
-				{
-					$found = true;
-					$this->setColumn($columnId, $data);
-				}
-
-				if (is_callable($data))
-				{
-					$found = true;
-					$this->setColumn($columnId, $columnId, $data);
 				}
 			}
 
@@ -181,7 +177,7 @@ abstract class TransformableData implements TransformableDataInterface
 	 * Pull a particular property from each assoc. array in a simple assoc array,
 	 * returning and array of the property values from each item.
 	 *
-	 * @param  array  $a    Array to get data from
+	 * @param  array $a Array to get data from
 	 * @param  string $prop Property to read
 	 *
 	 * @return array        Array of property values
