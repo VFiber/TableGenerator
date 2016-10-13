@@ -2,8 +2,6 @@
 
 namespace TableGenerator;
 
-use TableGenerator\Render\HTMLTable;
-
 /**
  * Class DataObject
  * A sample representation for an Array To Table interface.
@@ -12,21 +10,21 @@ use TableGenerator\Render\HTMLTable;
  * <pre>
  * $tableDataSource =
  * [
- *		[
- *			'im_a_col'   => 'First field in first row',
- *			'second_col' => 'second field in first row'
- *		],
- *		[
- *	    	'im_a_col'   => 'First field in second row',
- *	    	'second_col' => 'second field in first row'
- *		]
- *	];
+ *        [
+ *            'im_a_col'   => 'First field in first row',
+ *            'second_col' => 'second field in first row'
+ *        ],
+ *        [
+ *            'im_a_col'   => 'First field in second row',
+ *            'second_col' => 'second field in first row'
+ *        ]
+ *    ];
  * $do = new TableGenerator\DataObject([],$tableDataSource);
  * //you can pass this to a Render class by $render->setData($do);
  * </pre>
  *
  * @package TableGenerator
- * @see HTMLTable
+ * @see     \TableGenerator\Render\HTMLTable
  */
 class DataObject extends TransformableData implements ArrayDataSourceInterface, TransformableDataInterface, \Iterator, \Countable
 {
