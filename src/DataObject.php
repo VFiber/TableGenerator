@@ -26,8 +26,9 @@ namespace TableGenerator;
  * @package TableGenerator
  * @see     \TableGenerator\Render\HTMLTable
  */
-class DataObject extends TransformableData implements ArrayDataSourceInterface, TransformableDataInterface, \Iterator, \Countable
+class DataObject implements ArrayDataSourceInterface, TransformableDataInterface, \Iterator, \Countable
 {
+	use TransformableDataTrait;
 	/**
 	 * @var array Holds data until rendering. Its very inefficient for large amount of data (in terms of memory usage).
 	 */
@@ -39,12 +40,24 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 	protected $position;
 
 	/**
+	 * @var bool If the formatter field doesn't exists in the original data source, the first parameter (what would be the field itself)
+	 *      is skipped and starts with the row param instead (lets the user to use short config)
+	 */
+	protected $skipEmptyParamsInFormatter = true;
+
+	/**
+	 * @var array Cache the field config definitions at first run for faster processing.
+	 */
+	private $bodyFieldExist = [];
+
+	/**
 	 * DataObject constructor.
 	 *
 	 * @param array $columnArray List of cols. On empty array, this would be
 	 * @param array $data
+	 * @param bool $skipEmptyParamsInFormatter Skip first field if thats not exists in data (data rows has to be consistent)
 	 */
-	public function __construct(array $columnArray = [], array $data = [])
+	public function __construct(array $columnArray = [], array $data = [], $skipEmptyParamsInFormatter = false)
 	{
 		if (!empty($columnArray))
 		{
@@ -55,6 +68,8 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 		{
 			$this->setData($data);
 		}
+
+		$this->setSkipEmptyParamsInFormatter((bool)$skipEmptyParamsInFormatter);
 	}
 
 	/**
@@ -63,6 +78,7 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 	public function rewind()
 	{
 		$this->position = 0;
+		$this->bodyFieldExist = [];
 	}
 
 	/**
@@ -83,19 +99,38 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 		$row = [];
 		foreach ($this->headerData as $field => $data)
 		{
+			if ($this->position == 0)
+			{
+				//we cache this in every run, we can shave off a lot of isset command assuming the data is consistent ((row_count-1) * field_count times)
+				$this->bodyFieldExist[$field] = isset($this->bodyData[$this->position][$field]);
+			}
+
 			if ($data['formatter'])
 			{
-				$row[$field] =
-					call_user_func($data['formatter'],
-						(isset($this->bodyData[$this->position][$field]) ? $this->bodyData[$this->position][$field] : ''),
-						$this->bodyData[$this->position]);
+				if (!$this->bodyFieldExist[$field] && $this->skipEmptyParamsInFormatter)
+				{
+					$callParams = [
+						$this->bodyData[$this->position],
+						$this->position
+					];
+				}
+				else
+				{
+					$callParams = [
+						($this->bodyFieldExist[$field] ? $this->bodyData[$this->position][$field] : ''),
+						$this->bodyData[$this->position],
+						$this->position
+					];
+				}
+
+				$row[$field] = call_user_func_array($data['formatter'], $callParams);
 			}
 			else
 			{
-				$row[$field] = $this->bodyData[$this->position][$field];
+				$row[$field] = ($this->bodyFieldExist[$field] ? $this->bodyData[$this->position][$field] : '');
 			}
 
-			//ugly hack to remove every non-printable whitespace chars (tabs) that could cause nasty bugs in certain rendering modules.
+			//ugly hack to remove every non-printable whitespace chars (mostly tabs) that could cause nasty bugs in certain rendering modules.
 			$row[$field] = preg_replace("/\s+/", " ", $row[$field]);
 		}
 
@@ -150,6 +185,24 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 	}
 
 	/**
+	 * @return boolean
+	 */
+	public function isSkipEmptyParamsInFormatter()
+	{
+		return $this->skipEmptyParamsInFormatter;
+	}
+
+	/**
+	 * @param boolean $skipEmptyParamsInFormatter
+	 */
+	public function setSkipEmptyParamsInFormatter($skipEmptyParamsInFormatter)
+	{
+		$this->skipEmptyParamsInFormatter = $skipEmptyParamsInFormatter;
+
+		return $this;
+	}
+
+	/**
 	 * For the lazy ones who just want to make a table fast. Called by default if no columns set.
 	 */
 	public function setPrimitiveColumns()
@@ -160,6 +213,8 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 		{
 			$this->setColumn($columnName, $columnName);
 		}
+
+		return $this;
 	}
 
 	/**
@@ -167,8 +222,22 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 	 */
 	public function setData(array $data)
 	{
-		//FIXME_ asszoc tömbök
-		$this->bodyData = array_values($data);
+		if (array_keys($data) !== range(0, count($data) - 1))
+		{
+			//tought a lot about this, but if you need another data as a sequence, you can easily re-define those with the use of different iterators
+			trigger_error('The defined data contains associative indices instead of numeric. Extra indice data will be dropped.');
+			$this->bodyData = array_values($data);
+		}
+		else
+		{
+			$this->bodyData = $data;
+		}
+
+		if (!is_array($this->bodyData))
+		{
+			$this->bodyData = [];
+			throw new \Exception("Invalid data array, data cannot be interpreted as items!");
+		}
 
 		return $this;
 	}
@@ -205,7 +274,7 @@ class DataObject extends TransformableData implements ArrayDataSourceInterface, 
 			$this->setPrimitiveColumns();
 		}
 
-		return parent::getHeaderRow();
+		return self::pluck($this->headerData, 'displayedName');
 	}
 }
 
