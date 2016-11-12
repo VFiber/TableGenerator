@@ -2,7 +2,7 @@
 
 namespace TableGenerator;
 
-interface TableableDataSourceInterface
+interface TableableDataSourceInterface extends \Iterator
 {
 
 	/**
