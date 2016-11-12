@@ -10,40 +10,13 @@ namespace TableGenerator;
  */
 trait TransformableDataTrait
 {
+	use TableableDataSourceTrait;
 	/**
 	 * The data is requested as raw (without formatting) on output.
 	 *
 	 * @var bool
 	 */
 	protected $rawMode = false;
-
-	/**
-	 * Holds table config parameters.
-	 *
-	 * @var array
-	 */
-	protected $headerData = null;
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getColumnIds()
-	{
-		return array_keys($this->headerData);
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getColumnDisplayedName($coulmnId = 'internal_unique_colname')
-	{
-		if (!isset($this->headerData[$coulmnId]))
-		{
-			return false;
-		}
-
-		return $this->headerData[$coulmnId]['displayedName'];
-	}
 
 	/**
 	 * @inheritdoc
@@ -185,26 +158,5 @@ trait TransformableDataTrait
 	public function setRawMode($rawMode = false)
 	{
 		$this->rawMode = $rawMode;
-	}
-
-	/**
-	 * Pull a particular property from each assoc. array in a simple assoc array,
-	 * returning and array of the property values from each item.
-	 *
-	 * @param  array  $a    Array to get data from
-	 * @param  string $prop Property to read
-	 *
-	 * @return array        Array of property values
-	 */
-	static function pluck($a, $prop)
-	{
-		$out = [];
-
-		foreach ($a as $key => $value)
-		{
-			$out[$key] = $value[$prop];
-		}
-
-		return $out;
 	}
 }

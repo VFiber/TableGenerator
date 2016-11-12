@@ -28,11 +28,8 @@ namespace TableGenerator;
  */
 class DataObject implements ArrayDataSourceInterface, TransformableDataInterface, \Countable
 {
-	use TransformableDataTrait;
-	/**
-	 * @var array Holds data until rendering. Its very inefficient for large amount of data (in terms of memory usage).
-	 */
-	protected $bodyData = null;
+	use ArrayDataSourceTrait,
+		TransformableDataTrait;
 
 	/**
 	 * @var int Pointer in $bodyData.
@@ -140,21 +137,6 @@ class DataObject implements ArrayDataSourceInterface, TransformableDataInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function getRenderedArray($assocArray = true)
-	{
-		$transformedArray = [];
-
-		foreach ($this as $fields)
-		{
-			$transformedArray[] = ($assocArray ? $fields : array_values($fields));
-		}
-
-		return $transformedArray;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
 	public function key()
 	{
 		return $this->position;
@@ -203,6 +185,19 @@ class DataObject implements ArrayDataSourceInterface, TransformableDataInterface
 	}
 
 	/**
+	 * @inheritdoc
+	 */
+	public function getHeaderRow()
+	{
+		if (empty($this->headerData))
+		{
+			$this->setPrimitiveColumns();
+		}
+
+		return self::pluck($this->headerData, 'displayedName');
+	}
+
+	/**
 	 * For the lazy ones who just want to make a table fast. Called by default if no columns set.
 	 */
 	public function setPrimitiveColumns()
@@ -216,65 +211,4 @@ class DataObject implements ArrayDataSourceInterface, TransformableDataInterface
 
 		return $this;
 	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function setData(array $data)
-	{
-		if (array_keys($data) !== range(0, count($data) - 1))
-		{
-			//tought a lot about this, but if you need another data as a sequence, you can easily re-define those with the use of different iterators
-			trigger_error('The defined data contains associative indices instead of numeric. Extra indice data will be dropped.');
-			$this->bodyData = array_values($data);
-		}
-		else
-		{
-			$this->bodyData = $data;
-		}
-
-		if (!is_array($this->bodyData))
-		{
-			$this->bodyData = [];
-			throw new \Exception("Invalid data array, data cannot be interpreted as items!");
-		}
-
-		return $this;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function addRow($row)
-	{
-		$this->bodyData[] = $row;
-
-		return $this;
-	}
-
-	public function canDisplayCorrectly()
-	{
-		if (count($this->headerData) != count(reset($this->bodyData)))
-		{
-			trigger_error('Head column count and data column count does not match!');
-
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getHeaderRow()
-	{
-		if (empty($this->headerData))
-		{
-			$this->setPrimitiveColumns();
-		}
-
-		return self::pluck($this->headerData, 'displayedName');
-	}
 }
-
