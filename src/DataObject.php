@@ -26,7 +26,7 @@ namespace TableGenerator;
  * @package TableGenerator
  * @see     \TableGenerator\Render\HTMLTable
  */
-class DataObject implements ArrayDataSourceInterface, TransformableDataInterface, \Iterator, \Countable
+class DataObject implements ArrayDataSourceInterface, TransformableDataInterface, \Countable
 {
 	use TransformableDataTrait;
 	/**
