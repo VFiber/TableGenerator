@@ -18,7 +18,7 @@ class HTMLTable extends BaseRender
 	/**
 	 * HTMLTable constructor.
 	 *
-	 * @param array                              $htmlAttributes
+	 * @param array                              $htmlAttributes ['attribute' => 'value'] generates < table attribute='value'>
 	 * @param \TableGenerator\DataObject|null $data
 	 */
 	public function __construct(array $htmlAttributes = ['id' =>'rendered_table', 'class' => 'rendered_table_class'], DataObject $data = null)
